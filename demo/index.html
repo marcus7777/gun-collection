@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+  <head>
+    <title>gun-collection demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="../../iron-signals/iron-signals.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../gun-client/gun-client.html">
+    <link rel="import" href="../gun-collection.html">
+    <link rel="import" href="demo-data.html">
+    <style is="custom-style" include="demo-pages-shared-styles">
+    .demo {height: 330px!important;}
+    </style>
+  </head>
+  <body>
+  
+    <div class="vertical-section-container centered" style="max-width:80%">
+      <h3>gun-collection demo</h3>
+      <p>Assuming you have `gun-client` somewhere in your app</p>
+      <gun-client></gun-client>
+      <!-- first template is syntax highlight -->
+      <demo-snippet>
+        <template>
+          <!--Somewhere in your app --><gun-client></gun-client><!-- -->
+
+
+          <gun-collection id="gc" name="Members" records="{{returned_members}}"></gun-collection>
+
+            <template is="dom-repeat" items="{{returned_members}}" as="user">
+              <p>[[user.name]] from [[user.country]]</p>
+           </template>   
+        </template>
+
+              <!-- this runs -->
+        <template is="dom-bind">
+          <gun-collection id="gc" name="Users" records="{{Users}}"></gun-collection>
+          <demo-data msg="{{msg}}"></demo-data>
+          <div style="width: 100%;
+    background: #271B1B;
+    font-size: 16px;
+    color: white;
+    border-radius: 5px;
+    height: 30px;
+    line-height: 30px;
+    vertical-align: middle;
+    padding: 5px 5px;">
+          [[msg]]
+          </div>
+          <div style="height: 200px;">
+          <template is="dom-repeat" items="{{Users}}" as="user">
+            <p>[[user.name]] from [[user.country]] <template is="dom-if" if="[[user.happy]]"><span style="font-size:30px;color:orange;">&#9786;</span></template></p>
+          </template>
+        </div>
+
+         
+         
+       </template>
+      </demo-snippet>
+    </div>
+
+  </body>
+</html>
