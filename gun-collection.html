@@ -41,9 +41,9 @@ Oh..end you can do
 
 ```
 var gc = document.querySelector('gun-collection');
-gc.createRecord({name:'User1',age:30,...},'User1');
+gc.createRecord({key:'User1',data{{name:'User1',age:30,...}});
 gc.getRecord('User1');
-gc.updateRecord('User1',{age:31});
+gc.updateRecord({key:'User1',data:{age:31}});
 gc.removeRecord('User1');
 ```
 ## Example:
@@ -52,8 +52,8 @@ gc.removeRecord('User1');
 In your `<x-app>` ;
 
 ```
-this.$.users.createRecord('Stef',{name:'Stef',Country:'The Netherlands'});
-this.$.users.updateRecord('Stef',{Country:'USA'});
+this.$.users.createRecord({key:'Stef',data:{name:'Stef',Country:'The Netherlands'}});
+this.$.users.updateRecord({key:{'Stef'},data:{Country:'USA'}});
 this.$.users.removeRecord('Stef');
 ```
 And in your DOM:
@@ -77,6 +77,7 @@ But what if you need to provide your own callback? No problem...`<gun-collection
 @blurb Provides an easy starting point for a Gun based application.
 @demo demo/index.html
 -->
+<link rel="import" href="../iron-signals/iron-signals.html">
 <dom-module id="gun-collection">
   <template>
       <iron-signals on-iron-signal-gun-loaded="_gunLoaded"></iron-signals>  
@@ -156,7 +157,7 @@ But what if you need to provide your own callback? No problem...`<gun-collection
        * The user can override this function from outside.
        * it's executed from inside the .map() callback.
       */
-      mapCallback: function(record,key) {
+      mapCallback: function(record) {
         return record
       },
      
@@ -182,7 +183,7 @@ But what if you need to provide your own callback? No problem...`<gun-collection
             };
           } else {                                      // record has data so only this record is usefull
           // The map callback function will run each time someting changes in the collection 
-            cb_record = this.mapCallback(record,key)      // let user manipulate record first
+            cb_record = this.mapCallback(record)      // let user manipulate record first
             if(recordIndex==-1) {                       // it's not in this.records
               keys.push(key);                           // push a reference in keys
               this.push('records',cb_record);              // add it to this.records (will instantly update the DOM)
@@ -205,29 +206,38 @@ But what if you need to provide your own callback? No problem...`<gun-collection
      
 
       /** 
+      * create a new record in this collection
       * @data Object
       * @key use your own key or none
       */
-      createRecord: function(data,key) {
+      createRecord: function(args) {
+        var key = args.key;
+        var data = args.data;
         data[this.name] =1;          // tag this collection to the record
         typeof key=='undefined' ? this._gunCollection.set(gun.put(data)) 
                                 : this._gunCollection.set(gun.get(key).put(data));
       },
+      /** get the data from one of the records */
       getRecord: function(key) {
         var rec =null;
         gun.get(key).val(function(r) {rec=r;})
         return rec;
       },
-
-      updateRecord: function(key,data) {
+      /** update one record */
+      updateRecord: function(args) {
+        var key = args.key;
+        var data = args.data;
         if(typeof key =='string') {
           console.log('updating %s with %s',key,JSON.stringify(data))
            this._gunCollection.path(key).put(data);
         }
       },
+      /** if you tagged a record to a collection, you can untag it */
       unTagRecord: function(key) {
         this._gunCollection.path(key).path(this.name).put(0);
       },
+      /** No need to create the record again if you untagged it
+      * just retag it */
       reTagRecord: function(key) {
         var record = this.getRecord(key)
         if(this.name in record) {
@@ -247,7 +257,7 @@ But what if you need to provide your own callback? No problem...`<gun-collection
             data[key] = null; // null the data
           });
           console.log(key,data)
-          this.updateRecord(key,data); // update the record
+          this.updateRecord({key:key,data:data}); // update the record
         }.bind(this))
       }
     });

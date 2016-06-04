@@ -72,9 +72,9 @@
 			},
 			pushRecord: function(data) {
 					this.pushCounter = this.pushCounter + 1;
-					this.msg = 'this.$.gc.createRecord({key:"'+data.name+',data:{name:"'+data.name+'",country:"'+data.country+'"}})'
-					data.Users=1+'}';
-					this.$.gc.createRecord({data:data,key:data.name})
+					this.msg = 'this.$.gc.createRecord({key:"'+data.name+'" ,data:{name:"'+data.name+'",country:"'+data.country+'"}})'
+					data.Users=1;
+					this.$.gc.createRecord({key:data.name,data:data})
 					if(this.pushCounter == 5) {
 						this.unTagData();
 						//this.removeData()
@@ -113,14 +113,14 @@
 			updateData: function() {
 				this.users.forEach(function(user,i){
 					this.async(function(){
-						this.updateRecord({key:user.name,data:{happy:true}})
+						this.updateRecord(user.name,{happy:true})
 					},i*this.timer)
 				}.bind(this));
 			},
 			updateRecord:function(key,data) {
 				this.pushCounter = this.pushCounter - 1;
-				this.msg ='this.$.gc.updateRecord({Key:"'+name+'",data:{happy:true}})'
-				this.$.gc.updateRecord(key,data);
+				this.msg = 'this.$.gc.updateRecord({key:"'+key+'",data:{happy:true}})'
+				this.$.gc.updateRecord({key:key,data:data});
 				if(this.pushCounter==0) {
 					this.removeData();
 				}

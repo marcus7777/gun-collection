@@ -40,9 +40,9 @@ Oh..end you can do
 
 ```
 var gc = document.querySelector('gun-collection');
-gc.createRecord({name:'User1',age:30,...},'User1');
+gc.createRecord({key:'User1',data:{name:'User1',age:30,...}});
 gc.getRecord('User1');
-gc.updateRecord('User1',{age:31});
+gc.updateRecord({key:'User1',data:{age:31}});
 gc.removeRecord('User1');
 ```
 ## Example:
@@ -51,8 +51,8 @@ gc.removeRecord('User1');
 In your `<x-app>` ;
 
 ```
-this.$.users.createRecord('Stef',{name:'Stef',Country:'The Netherlands'});
-this.$.users.updateRecord('Stef',{Country:'USA'});
+this.$.users.createRecord({key:'Stef',data:{name:'Stef',Country:'The Netherlands'}});
+this.$.users.updateRecord({key:'Stef',data:{Country:'USA'}});
 this.$.users.removeRecord('Stef');
 ```
 And in your DOM:
