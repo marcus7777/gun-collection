@@ -1,0 +1,26 @@
+{
+  "name": "gun-client",
+  "description": "start GunDB with or without server",
+  "main": "gun-client.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  },
+  "author": "Stefdv",
+  "homepage": "https://github.com/Stefdv/gun-client",
+  "version": "0.3.91",
+  "_release": "0.3.91",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.3.91",
+    "commit": "8f153ffd3ce96e8a86ba4dcd402eea0a31663f2f"
+  },
+  "_source": "git://github.com/Stefdv/gun-client.git",
+  "_target": "0.3.91",
+  "_originalSource": "Stefdv/gun-client"
+}

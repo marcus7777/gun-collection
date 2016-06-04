@@ -1,0 +1,144 @@
+<script src="gun.js"></script>
+<link rel="import" href="../polymer/polymer.html">
+<!--
+Element to use with GUNDB (http://gun.js.org/enterprise/)
+
+Provides an easy starting point for a Gun based application.
+- loads gun.js
+- switch plugins on/off through attributes
+  (each,local,image please see https://github.com/amark/gun/wiki/Snippets-(v0.3.x) )
+- set peers through attribute `server-url`
+- initialises Gun with a global `var gun`.
+- publishes a `gun-loaded' message to the rest of your application (uses `<iron-signals>` )
+
+## Examples:
+
+Default (No peer,no syncing):
+
+    <gun-client></gun-client>
+
+
+One peer:
+
+     <gun-client server-url="http://yourServer.com/gun"></gun-client>
+
+Multiple peers:
+
+     <gun-client server-url="http://server1.com/gun, http://server2.com/gun"></gun-client>
+
+Switch on 'each' plugin https://github.com/amark/gun/wiki/Snippets-(v0.3.x)#guneach:
+
+      <gun-client each></gun-client>
+
+
+
+@element gun-client
+@blurb Provides an easy starting point for a Gun based application.
+@demo demo/index.html
+-->
+
+<dom-module id="gun-client">
+  <script>
+HTMLImports.whenReady(function() {
+    Polymer({
+      is: 'gun-client',
+      properties: {
+        /** provide URL(s) to your Gun peers.
+        * Multiple urls split by a comma, but keep it one string eg. : "http://server1.com/gun, http://server2.com/gun" 
+        */
+        serverUrl: {
+          type: String,
+          value:null,
+          reflectToAttribute:true,
+          observer:'_serverUrlChanged'
+        },
+        /** chain each pugin to enable the use of `.each()`. */
+        each: {
+          value: Boolean,
+          value:false
+        },
+        /** chain local plugin. */
+        local:{
+          value: Boolean,
+          value:false
+        },
+        /**  chain image plugin. */
+        image:{
+          value: Boolean,
+          value:false
+        }
+      },
+      ready: function() {
+        if(!this.serverUrl) {
+          console.log('setting gun without peers');
+          this._setChains();
+        }
+      },
+      _serverUrlChanged: function(newUrl,oldUrl) {
+        console.log('_serverUrlChanged ', this.serverUrl)
+          if(newUrl){
+            this.peerUrl = newUrl.split(',')
+            //this.serverUrl = this.serverUrl
+            this._setChains();
+          } 
+      },
+      _setChains:function() {
+        this.each? this._chainEach() : null;
+        this.image ? this._chainImage() : null;
+        this.local ? this._chainLocal() : null;
+        this._startGun();
+      },
+      _chainEach:function() {
+        Gun.chain.each = function () {
+            var each = this.map();
+            return this.val.apply(each, arguments)
+          }
+      },
+      _chainImage: function() {
+        Gun.chain.image = function (img) {
+          if (!img.src) {
+            return this.val(function (src) {
+              img.src = src
+            });
+          }
+          var canvas = document.createElement('canvas');
+          var ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+          var data = canvas.toDataURL();
+          return this.put(data);
+        }
+      },
+      _chainLocal: function() {
+        Gun.chain.local = function (data, cb, opt) {
+          opt = opt || { };
+          opt.peers = { };
+          return this.put(data, cb, opt)
+        }
+      },
+      _startGun: function() {
+          gun = this.peerUrl ? Gun(this.peerUrl) : Gun()
+          this._fire();
+      },
+      /**
+       * Fired when `gun-client` is finished setting upb gun.
+       * (pub/sub)
+       * @event iron-signal-on-gun-loaded 
+       */
+       /**
+       * Fired when `gun-client` is finished setting up gun.
+       * (bubbles)
+       * @event gun-loaded
+       *
+       */
+      _fire: function() {
+        this.async(function(){
+          this.fire('iron-signal',{name:'gun-loaded'});
+          this.fire('gun-loaded');
+        },250)  
+      }
+    });
+})
+  </script>
+</dom-module>

@@ -1,0 +1,16 @@
+{
+  "name": "gun-collection",
+  "description": "manage one gun collection(set) with full CRUD",
+  "main": "gun-collection.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.4.0",
+    "iron-signals": "^1.0.3",
+    "gun-client": "Stefdv/gun-client#0.3.91"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^1.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^1.0.0",
+    "web-component-tester": "^4.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^0.7.0"
+  }
+}

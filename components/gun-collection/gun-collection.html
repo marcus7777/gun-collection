@@ -1,0 +1,266 @@
+<!--
+Use Gun without knowing the Gun API.
+
+Web-component for GUNDB (http://gun.js.org/enterprise/)
+
+and Polymer (https://www.polymer-project.org/1.0/)
+
+## Discription
+
+`<gun-collection>` provides full CRUD operations on a gun collection 
+
+## Member of a collection of Gun components.
+`<gun-client>`      http://stefdv.github.io/gun-client/components/gun-client/
+
+`<gun-collection>`
+
+`<gun-datatable>`   Working on API docs
+
+`<gun-tagger>`      Working on API docs
+
+`<gun-models>`      Working on API docs
+
+`<gun-tags>`        Working on API docs
+
+`<gun-sets>`        Working on API docs
+
+`<gun-todo>`        Working on API docs
+
+
+
+## Dependencies 
+`<gun-client>` : https://github.com/Stefdv/gun-client
+
+## Usage
+
+Just provide it with a name of your collection and it returns your records.
+
+But wait!! It not only returns them...it updates them as well !
+
+Oh..end you can do  
+
+```
+var gc = document.querySelector('gun-collection');
+gc.createRecord({key:'User1',data{{name:'User1',age:30,...}});
+gc.getRecord('User1');
+gc.updateRecord({key:'User1',data:{age:31}});
+gc.removeRecord('User1');
+```
+## Example:
+`<gun-collection id="users" name="Users" records="{{Users}}"></gun-collection>`
+
+In your `<x-app>` ;
+
+```
+this.$.users.createRecord({key:'Stef',data:{name:'Stef',Country:'The Netherlands'}});
+this.$.users.updateRecord({key:{'Stef'},data:{Country:'USA'}});
+this.$.users.removeRecord('Stef');
+```
+And in your DOM:
+
+```
+<gun-collection id="users" name="Users" records="{{Users}}"></gun-collection>
+<ul>
+<template is="dom-repeat" items="{{Users}}" as="user">
+  <li>[[user.name]] from [[user.Country]]</li>
+</template>
+</ul>
+```
+## And then some
+
+`<gun-collection>` uses a callback `.map()`  to listen for changes on the records.
+
+It also does al kind of filtering on them (leaving out 'nulled' items and items that are 'unTagged').
+But what if you need to provide your own callback? No problem...`<gun-collection>` has a function that can be overriden. `mapCallback()` . This function is called from the gun-collections callback so you can manipulate the records before they come back to you.
+
+@element gun-collection
+@blurb Provides an easy starting point for a Gun based application.
+@demo demo/index.html
+-->
+<link rel="import" href="../iron-signals/iron-signals.html">
+<dom-module id="gun-collection">
+  <template>
+      <iron-signals on-iron-signal-gun-loaded="_gunLoaded"></iron-signals>  
+  </template>
+  <script>
+
+    Polymer({
+      is: 'gun-collection',
+      properties: {
+        /** the name of your app used as prefix for your collections */
+        appName: {
+          type: String,
+          value: 'GL',
+          readOnly:true
+        },
+        /** name of the Gun set/collection */
+        name: {
+          type: String,
+          observer:'_nameChanged'
+        },
+        /** your records from this collection.
+        *  use this to build your DOM. */
+        records: {
+          type: Array,
+          notify:true
+        },
+        /** this will be your gun instance
+         * `this._gunCollection = gun.get('<name>')` */
+        _gunCollection: {
+          type: Object
+        },
+        /** on-iron-signal-gun-loaded
+        *  is true when Gun is iniated */
+        gunLoaded: {
+          type: Boolean,
+          value: false,
+          observer: '_gunLoadedChanged'
+        },
+       
+        _collectionSet: {
+          type: Boolean,
+          value: false
+        }
+      },
+      /** `<gun-client>` will send a signal when gun is ready */
+      _gunLoaded: function(e) {
+        this.gunLoaded = true;
+      },
+      /** check if we have gun and a name */
+      _gunLoadedChanged: function(newState,oldState) {
+
+        if(this.gunLoaded && this.name) {
+          this._setCollection();
+        }
+      },
+      /** check if we have gun and a name */
+      _nameChanged: function(newName,oldName) {
+
+        if(this.gunLoaded && newName) {
+           this._setCollection();
+        }
+      },
+      /**
+       *  when we have a name and gun is loaded we create a 
+       *  gun instance with it
+      */
+      _setCollection: function() {
+        if(!this._collectionSet) {
+          this._collectionSet = true;
+          console.log('"%s" asign collection', this.name)
+          this.id=this.name
+          this._gunCollection = gun.get(this.appName + '/'+ this.name);
+          this._getRecords();
+        }
+      },
+      /**
+       * The user can override this function from outside.
+       * it's executed from inside the .map() callback.
+      */
+      mapCallback: function(record) {
+        return record
+      },
+     
+      _getRecords: function() {
+        // do this no mather what
+        var keys = [];
+        var usedFields = {};
+        var cb_record;
+        this.records = [];
+       
+        /* can't make a seperate callback function because then i loose my scope */
+        this._gunCollection.map(function(record,key) {   
+
+          record.key = key;                             // 'flatten' key to record for convenience (don't like doing ._['#'] )
+          var recordIndex = keys.indexOf(key);          // if this key is already in this.records get its position (or it is -1)
+          if(!this._objectHasData(record) || record[this.name]==0 ) { // the record does not contain any data
+            if(recordIndex >-1) {                       // but it is still in this.records        
+              if(this.records[recordIndex].key ===key) {// check if key at this position is the right one!!
+
+                this.splice('records',recordIndex,1);   // remove it ( will instantly update the DOM)
+                keys.splice(keys.indexOf(key),1);       // remove it from keys also
+              }; 
+            };
+          } else {                                      // record has data so only this record is usefull
+          // The map callback function will run each time someting changes in the collection 
+            cb_record = this.mapCallback(record)      // let user manipulate record first
+            if(recordIndex==-1) {                       // it's not in this.records
+              keys.push(key);                           // push a reference in keys
+              this.push('records',cb_record);              // add it to this.records (will instantly update the DOM)
+            } else {                                    // already in this.records but might be changed
+              this.splice('records',recordIndex,1,cb_record)
+            };
+          };
+        }.bind(this));// end map();
+      },
+      /** check if record has values on the keys */
+      _objectHasData: function(record) {
+        var hasData = false;
+        // .every instead of each so we can break out of the loop
+        Object.keys(record).every(function(key) {
+            hasData = record[key] == null ? false : true;
+            return record[key] !== null;  // continue as long as we have values
+          });
+        return hasData;
+      },
+     
+
+      /** 
+      * create a new record in this collection
+      * @data Object
+      * @key use your own key or none
+      */
+      createRecord: function(args) {
+        var key = args.key;
+        var data = args.data;
+        data[this.name] =1;          // tag this collection to the record
+        typeof key=='undefined' ? this._gunCollection.set(gun.put(data)) 
+                                : this._gunCollection.set(gun.get(key).put(data));
+      },
+      /** get the data from one of the records */
+      getRecord: function(key) {
+        var rec =null;
+        gun.get(key).val(function(r) {rec=r;})
+        return rec;
+      },
+      /** update one record */
+      updateRecord: function(args) {
+        var key = args.key;
+        var data = args.data;
+        if(typeof key =='string') {
+          console.log('updating %s with %s',key,JSON.stringify(data))
+           this._gunCollection.path(key).put(data);
+        }
+      },
+      /** if you tagged a record to a collection, you can untag it */
+      unTagRecord: function(key) {
+        this._gunCollection.path(key).path(this.name).put(0);
+      },
+      /** No need to create the record again if you untagged it
+      * just retag it */
+      reTagRecord: function(key) {
+        var record = this.getRecord(key)
+        if(this.name in record) {
+          this._gunCollection.path(key).path(this.name).put(1);
+        }
+       
+      },
+      /**
+      *  gun doesn't like records to be deleted instead we 'null' its data,
+      *  then we update the record with the empty fields
+      *  this will trigger the change to gun
+      *  when rebuilding this.records we filter out any record that has no data
+      */
+      removeRecord: function(key) {
+        this._gunCollection.get(key).val(function(data){ // get the record
+          Object.keys(data).map(function(key) { // loop through each property
+            data[key] = null; // null the data
+          });
+          console.log(key,data)
+          this.updateRecord({key:key,data:data}); // update the record
+        }.bind(this))
+      }
+    });
+
+  </script>
+</dom-module>
